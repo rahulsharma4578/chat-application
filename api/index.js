@@ -6,6 +6,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
+const ws = require('ws');
 
 dotenv.config();
 async function connectToDatabase() {
@@ -86,7 +87,33 @@ app.post('/register', async (req,res) => {
   }
 });
 
-app.listen(4000);
+const server = app.listen(4000);
+
+//since we want the id and username of the connected user stored in the cookies so we will
+//grab them by decoding from the cookies.
+const wss = new ws.WebSocketServer({server});
+wss.on('connection',(connection, req) => {
+  console.log(req.headers);
+  const cookies = req.headers?.cookie;
+  if (cookies) {
+    const tokenCookieString = cookies.split(';').find(cookie => cookie.trim().startsWith('token='));
+    if(tokenCookieString) {
+      const token = tokenCookieString.split('=')[1];
+      if(token) {
+        //Now we need to decode the token using jwt.
+        jwt.verify(token, jwtSecret, {},(err, userData) => {
+          if (err) throw err;
+          const {userId, username} = userData;
+          connection.userId = userId;
+          connection.username = username;
+        });
+      }
+    }
+  }
+
+});
+
+
 
 
 
