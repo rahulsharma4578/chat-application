@@ -15,10 +15,25 @@ export default function Chat() {
   const {username, id} = useContext(UserContext);
   const divUnderMessages = useRef();
   useEffect(() => {
+    connectToWs();
+
+
+  }, []);
+  function connectToWs() {
     const ws = new WebSocket('ws://localhost:4000');
     setWs(ws);
-    ws.addEventListener('message', handleMessage)
-  }, []);
+    ws.addEventListener('message', handleMessage);
+    //this connectTows function is to cinnect to web socket on its own when refresh is done.
+    //Without this when the server starts all the users vanishes.
+    //over here i have applied a timeout of some second to reconnect to ws.
+    ws.addEventListener('close', () => {
+      setTimeout(() => {
+        console.log('Disconnected. Trying to reconnect.');
+        connectToWs();
+      }, 1000);
+    });
+
+  }
   //below we are displaying the unique users.
   function showOnlinePeople(peopleArray) {
     const people = {};
