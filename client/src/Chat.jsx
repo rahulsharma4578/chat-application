@@ -3,6 +3,7 @@ import Avatar from "./Avatar";
 import Logo from "./Logo";
 import {uniqBy} from "lodash";
 import {UserContext} from "./UserContext.jsx";
+import axios from "axios";
 
 
 export default function Chat() {
@@ -48,7 +49,7 @@ export default function Chat() {
     //the below date.now will actually assign id so that all the messages we send get displayed on our screen
     setMessages(prev => ([...prev,{text: newMessageText, sender: id, recipient: selectedUserId,id:Date.now(),}]));
 
-    
+
 
   }
   //the below function will run when the messages changes
@@ -59,6 +60,13 @@ export default function Chat() {
     }
 
   }, [messages]);
+  //The below useeffect will rum when the selecteduserId changes
+  useEffect(() => {
+    if(selectedUserId) {
+      axios.get('/messages/' +selectedUserId)
+    }
+
+  }, [selectedUserId]);
 
   const onlinePeopleExclOurUser = {...onlinePeople};
   delete onlinePeopleExclOurUser[id];
