@@ -62,7 +62,7 @@ export default function Chat() {
     }));
     setNewMessageText('');
     //the below date.now will actually assign id so that all the messages we send get displayed on our screen
-    setMessages(prev => ([...prev,{text: newMessageText, sender: id, recipient: selectedUserId,id:Date.now(),}]));
+    setMessages(prev => ([...prev,{text: newMessageText, sender: id, recipient: selectedUserId,_id:Date.now(),}]));
 
 
 
@@ -78,7 +78,9 @@ export default function Chat() {
   //The below useeffect will rum when the selecteduserId changes
   useEffect(() => {
     if(selectedUserId) {
-      axios.get('/messages/' +selectedUserId)
+      axios.get('/messages/' +selectedUserId).then(res => {
+        setMessages(res.data);
+      });
     }
 
   }, [selectedUserId]);
@@ -87,7 +89,7 @@ export default function Chat() {
   delete onlinePeopleExclOurUser[id];
 
   // The below uniqby function from lodash is used to get the unique messages.
-  const messageWithoutDupes = uniqBy(messages, 'id');
+  const messageWithoutDupes = uniqBy(messages, '_id');
 
 
   return (
@@ -123,10 +125,9 @@ export default function Chat() {
            <div className="relative h-full">
             <div  className="overflow-y-scroll absolute top-0 left-0 right-0 bottom-2">
             {messageWithoutDupes.map(message => (
-            <div className={(message.sender === id ? 'text-right' : 'text-left')}>
+            <div key={message._id} className={(message.sender === id ? 'text-right' : 'text-left')}>
               <div className={"text-left inline-block p-2 my-2 rounded-md text-sm" + (message.sender === id ? 'bg-blue-500 text-orange' : 'bg-white text-gray-500')}>
-               sender:{message.sender}<br />
-               my id: {id}<br />
+
                {message.text}
               </div>
             </div>

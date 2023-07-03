@@ -66,7 +66,7 @@ app.get('/messages/:userId', async(req,res) => {
   const messages = await Message.find({
     sender:{$in:[userId,ourUserId]},
     recipient:{$in:[userId,ourUserId]},
-  }).sort({createdAt:-1});
+  }).sort({createdAt: 1});
    res.json(messages);
 });
 
@@ -156,7 +156,7 @@ wss.on('connection',(connection, req) => {
 
     [...wss.clients]
     .filter(c => c.userId === recipient)
-    .forEach(c => c.send(JSON.stringify({text,sender:connection?.userId,recipient,id:messageDoc._id})));
+    .forEach(c => c.send(JSON.stringify({text,sender:connection?.userId,recipient,_id:messageDoc._id})));
   }
 
   });
