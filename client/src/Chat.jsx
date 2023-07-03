@@ -1,4 +1,4 @@
-import {useEffect, useState,useContext} from "react";
+import {useEffect, useState,useContext,useRef} from "react";
 import Avatar from "./Avatar";
 import Logo from "./Logo";
 import {uniqBy} from "lodash";
@@ -12,6 +12,7 @@ export default function Chat() {
   const [newMessageText,setNewMessageText] = useState('');
   const [messages,setMessages] = useState([]);
   const {username, id} = useContext(UserContext);
+  const divUnderMessages = useRef();
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:4000');
     setWs(ws);
@@ -46,7 +47,18 @@ export default function Chat() {
     setNewMessageText('');
     //the below date.now will actually assign id so that all the messages we send get displayed on our screen
     setMessages(prev => ([...prev,{text: newMessageText, sender: id, recipient: selectedUserId,id:Date.now(),}]));
+
+    
+
   }
+  //the below function will run when the messages changes
+  useEffect(() => {
+    const div = divUnderMessages.current;
+    if (div) {
+      div.scrollIntoView({behavior:'smooth', block:'end'});
+    }
+
+  }, [messages]);
 
   const onlinePeopleExclOurUser = {...onlinePeople};
   delete onlinePeopleExclOurUser[id];
@@ -83,27 +95,30 @@ export default function Chat() {
               <div className="text-gray-400">&larr; Select a person from sidebar</div>
             </div>
           )}
-          {!!selectedUserId && (
-           <div className="overflow-y-scroll">
-             {messageWithoutDupes.map(message => (
-             <div className={(message.sender === id ? 'text-right' : 'text-left')}>
-               <div className={"text-left inline-block p-2 my-2 rounded-md text-sm" + (message.sender === id ? 'bg-blue-500 text-orange' : 'bg-white text-gray-500')}>
-                sender:{message.sender}<br />
-                my id: {id}<br />
-                {message.text}
-               </div>
+         {!!selectedUserId && (
+
+           <div className="relative h-full">
+            <div  className="overflow-y-scroll absolute top-0 left-0 right-0 bottom-2">
+            {messageWithoutDupes.map(message => (
+            <div className={(message.sender === id ? 'text-right' : 'text-left')}>
+              <div className={"text-left inline-block p-2 my-2 rounded-md text-sm" + (message.sender === id ? 'bg-blue-500 text-orange' : 'bg-white text-gray-500')}>
+               sender:{message.sender}<br />
+               my id: {id}<br />
+               {message.text}
+              </div>
+            </div>
+            ))}
+            <div ref={divUnderMessages}></div>
 
 
-             </div>
-
-
-
-             ))}
-
-
+            </div>
            </div>
 
-          )}
+
+
+
+
+         )}
         </div>
         {!!selectedUserId && (
           <form className="flex gap-2 " onSubmit={sendMessage}>
