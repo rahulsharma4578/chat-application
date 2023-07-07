@@ -130,7 +130,36 @@ const server = app.listen(4000);
 //grab them by decoding from the cookies.
 const wss = new ws.WebSocketServer({server});
 wss.on('connection',(connection, req) => {
-  console.log(req.headers);
+
+  function notifyAboutOnlinePeople() {
+    [...wss.clients].forEach(client => {
+      client.send(JSON.stringify({
+        online: [...wss.clients].map(c => ({userId:c.userId,username:c.username})),
+
+      }));
+    });
+
+
+  }
+
+  connection.isAlive=true;
+
+  connection.timer = setInterval(() => {
+    connection.ping();
+    connection.deathTimer = setTimeout(() => {
+      connection.isAlive=false;
+      connection.terminate();
+      notifyAboutOnlinePeople();
+    }, 1000);
+
+  }, 5000);
+
+  connection.on('pong', () => {
+    clearTimeout(connection.deathTimer);
+
+  });
+
+
   // read username and id from the cookie for this connection
   const cookies = req.headers?.cookie;
   if (cookies) {
@@ -166,14 +195,10 @@ wss.on('connection',(connection, req) => {
 
   });
   // notify everyone about the online people (when someone connects to the app)
-  [...wss.clients].forEach(client => {
-    client.send(JSON.stringify({
-      online: [...wss.clients].map(c => ({userId:c.userId,username:c.username})),
-
-    }));
-  });
-
+  notifyAboutOnlinePeople();
 });
+
+
 
 
 
